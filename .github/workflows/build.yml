@@ -37,7 +37,7 @@ jobs:
           pip install torch==2.12.0 torchaudio==2.11.0 --index-url https://download.pytorch.org/whl/cpu
 
       - name: Install remaining dependencies
-        run: pip install -r requirements.txt
+        run: pip install -r requirements.txt pyinstaller
 
       - name: Install Linux audio deps
         if: runner.os == 'Linux'
