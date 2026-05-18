@@ -2,6 +2,8 @@ name: Build Binaries
 
 on:
   push:
+    branches:
+      - master
     tags:
       - "v*"          # trigger on version tags: git tag v1.0.0 && git push --tags
   workflow_dispatch:  # or manually from GitHub UI
