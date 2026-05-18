@@ -74,3 +74,18 @@ MAX_TOKENS=400
 ```
 
 Результат в `dist/assistant/`. Скопируй `.env` рядом с бинарём.
+
+## Linux / Wayland
+
+На Wayland глобальные горячие клавиши читаются через `evdev` из `/dev/input`.
+Добавь пользователя в группу `input` и перелогинься:
+
+```bash
+sudo usermod -a -G input $USER
+```
+
+После повторного входа при старте должно появиться:
+
+```text
+Hotkeys: evdev backend active (... keyboard device(s)).
+```

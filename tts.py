@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import re
+import threading
+import time
 
 import sounddevice as sd
 import torch
 
+from audio_device import SOUNDDEVICE_LOCK
 from config import Settings
 
 _EN_TO_RU: dict[str, str] = {
@@ -77,6 +80,9 @@ class SileroTTS:
         self._speaker = settings.speaker
         self._rate = settings.speech_rate
         self._normalizer = TextNormalizer()
+        self._state_lock = threading.Lock()
+        self._generation = 0
+        self._stop_event = threading.Event()
 
         print("Загрузка Silero TTS...")
         self._model, _ = torch.hub.load(
@@ -88,6 +94,11 @@ class SileroTTS:
         print("Silero загружен.")
 
     def speak(self, text: str) -> None:
+        with self._state_lock:
+            self._generation += 1
+            generation = self._generation
+            self._stop_event.clear()
+
         text = self._normalizer.normalize(text)
         if not text:
             return
@@ -97,7 +108,39 @@ class SileroTTS:
                 speaker=self._speaker,
                 sample_rate=self._SILERO_SAMPLE_RATE,
             )
-            sd.play(audio.numpy(), samplerate=int(self._SILERO_SAMPLE_RATE * self._rate))
-            sd.wait()
+
+            with self._state_lock:
+                if generation != self._generation:
+                    return
+
+            samplerate = int(self._SILERO_SAMPLE_RATE * self._rate)
+            samples = audio.numpy()
+            duration = len(samples) / samplerate
+
+            with SOUNDDEVICE_LOCK:
+                with self._state_lock:
+                    if generation != self._generation:
+                        return
+                sd.stop()
+                sd.play(samples, samplerate=samplerate)
+
+            deadline = time.monotonic() + duration
+            while time.monotonic() < deadline:
+                with self._state_lock:
+                    if generation != self._generation:
+                        break
+                if self._stop_event.wait(0.05):
+                    break
+
+            with SOUNDDEVICE_LOCK:
+                sd.stop()
         except Exception as exc:
             print(f"Ошибка TTS: {exc}")
+
+    def stop(self) -> None:
+        with self._state_lock:
+            self._generation += 1
+            self._stop_event.set()
+        with SOUNDDEVICE_LOCK:
+            sd.stop()
+        time.sleep(0.05)

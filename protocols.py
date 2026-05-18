@@ -20,6 +20,10 @@ class TTSProtocol(Protocol):
         """Synthesize and play text aloud."""
         ...
 
+    def stop(self) -> None:
+        """Stop current audio playback, if any."""
+        ...
+
 
 class LLMClientProtocol(Protocol):
     def ask(self, text: str, image_b64: str | None = None) -> str:

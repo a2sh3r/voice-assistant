@@ -47,10 +47,13 @@ class Assistant:
             s = self._settings
 
             if hotkeys.is_held(s.key_exit):
+                self._tts.stop()
                 self._exit_event.set()
                 break
 
             if self._processing.is_set():
+                if hotkeys.is_held(s.key_speak) or hotkeys.is_held(s.key_screenshot):
+                    self._tts.stop()
                 time.sleep(0.05)
                 continue
 
@@ -63,6 +66,7 @@ class Assistant:
                 time.sleep(0.2)
 
             elif hotkeys.is_held(s.key_clear):
+                self._tts.stop()
                 self._llm.clear_history()
                 if self._overlay:
                     self._overlay.clear()
@@ -89,6 +93,10 @@ class Assistant:
         print("Выход.")
 
     def _start_processing(self, key: str, with_screenshot: bool) -> None:
+        if self._processing.is_set():
+            return
+        self._tts.stop()
+        self._processing.set()
         threading.Thread(
             target=self._process,
             args=(key, with_screenshot),
@@ -96,9 +104,6 @@ class Assistant:
         ).start()
 
     def _process(self, key: str, with_screenshot: bool) -> None:
-        if self._processing.is_set():
-            return
-        self._processing.set()
         try:
             image_b64 = self._take_screenshot_if_needed(with_screenshot)
             audio = self._stt.record_while_held(key)
@@ -123,7 +128,11 @@ class Assistant:
             if self._overlay:
                 self._overlay.push_message("assistant", reply)
 
-            self._tts.speak(reply)
+            threading.Thread(
+                target=self._tts.speak,
+                args=(reply,),
+                daemon=True,
+            ).start()
         finally:
             self._processing.clear()
 

@@ -10,6 +10,7 @@ import sounddevice as sd
 import soundfile as sf
 import whisper
 
+from audio_device import SOUNDDEVICE_LOCK
 import hotkeys
 from config import Settings
 
@@ -42,11 +43,12 @@ class WhisperRecognizer:
         """Stream microphone input into chunks while the key is held down."""
         chunks: list[np.ndarray] = []
         print("● Запись... (держи кнопку)")
-        with sd.InputStream(samplerate=self._sample_rate, channels=1, dtype="float32") as stream:
-            while hotkeys.is_held(key):
-                chunk, _ = stream.read(int(self._sample_rate * 0.05))
-                chunks.append(chunk.copy())
-                time.sleep(0.01)
+        with SOUNDDEVICE_LOCK:
+            with sd.InputStream(samplerate=self._sample_rate, channels=1, dtype="float32") as stream:
+                while hotkeys.is_held(key):
+                    chunk, _ = stream.read(int(self._sample_rate * 0.05))
+                    chunks.append(chunk.copy())
+                    time.sleep(0.01)
 
         if not chunks:
             return np.array([], dtype="float32")

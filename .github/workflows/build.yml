@@ -36,16 +36,18 @@ jobs:
           pip install --upgrade pip
           pip install torch==2.12.0 torchaudio==2.11.0 --index-url https://download.pytorch.org/whl/cpu
 
-      - name: Install remaining dependencies
-        run: pip install -r requirements.txt pyinstaller
-
       - name: Install Linux audio deps
         if: runner.os == 'Linux'
-        run: sudo apt-get install -y libportaudio2 libsndfile1
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libportaudio2 libsndfile1 linux-libc-dev
 
       - name: Install macOS audio deps
         if: runner.os == 'macOS'
         run: brew install portaudio libsndfile
+
+      - name: Install remaining dependencies
+        run: pip install -r requirements.txt pyinstaller
 
       - name: Add torch lib to PATH (Windows)
         if: runner.os == 'Windows'

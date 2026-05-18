@@ -26,6 +26,21 @@ soundfile_bins  = collect_dynamic_libs("soundfile")
 omegaconf_modules = collect_submodules("omegaconf")
 antlr4_modules    = collect_submodules("antlr4")
 tqdm_modules      = collect_submodules("tqdm")
+try:
+    evdev_modules = collect_submodules("evdev")
+except Exception:
+    evdev_modules = []
+
+# ── pynput: explicitly include Linux backends that are loaded dynamically.
+#    XWayland uses _xorg; native Wayland global hotkeys use keyboard._uinput.
+pynput_modules = [
+    "pynput.keyboard._xorg",
+    "pynput._util.xorg",
+    "pynput._util.xorg_keysyms",
+    "pynput.keyboard._uinput",
+    "pynput._util.uinput",
+    *evdev_modules,
+]
 
 block_cipher = None
 
@@ -61,10 +76,8 @@ a = Analysis(
         "PyQt5.QtCore",
         "PyQt5.QtGui",
         "PyQt5.QtWidgets",
-        # input
-        "pynput",
-        "pynput.keyboard",
-        "pynput.mouse",
+        # input — Linux backends are collected above for X11 and Wayland/evdev
+        *pynput_modules,
         # PIL
         "PIL",
         "PIL.ImageGrab",

@@ -93,13 +93,9 @@ _FLAGS_LOCKED = (
     Qt.FramelessWindowHint
     | Qt.WindowStaysOnTopHint
     | Qt.WindowTransparentForInput
-    | Qt.Tool
+    | Qt.Window
 )
-_FLAGS_UNLOCKED = (
-    Qt.FramelessWindowHint
-    | Qt.WindowStaysOnTopHint
-    | Qt.Tool
-)
+_FLAGS_UNLOCKED = Qt.Window
 
 
 class OverlayWindow(QWidget):
@@ -121,6 +117,7 @@ class OverlayWindow(QWidget):
 
     def __init__(self) -> None:
         super().__init__()
+        self.setWindowTitle("Voice Assistant Overlay")
         self.setObjectName("overlay_root")
         self._locked = True
         self._drag_pos: QPoint | None = None
@@ -204,14 +201,14 @@ class OverlayWindow(QWidget):
         self._locked = not self._locked
         flags = _FLAGS_LOCKED if self._locked else _FLAGS_UNLOCKED
         self.setWindowFlags(flags)
+        self.setAttribute(Qt.WA_ShowWithoutActivating, self._locked)
         self.show()
-        status = "заблокирован" if self._locked else "разблокирован (можно двигать)"
+        status = "заблокирован/click-through" if self._locked else "обычное окно (можно скейлить/тайлить)"
         print(f"Оверлей {status}")
 
     def _build_ui(self) -> None:
-        self.setFixedWidth(420)
-        self.setMinimumHeight(100)
-        self.setMaximumHeight(340)
+        self.resize(420, 340)
+        self.setMinimumSize(280, 120)
 
         outer = QVBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0)
@@ -247,7 +244,7 @@ class OverlayWindow(QWidget):
 
     def _position_window(self) -> None:
         screen = QApplication.primaryScreen().availableGeometry()
-        self.move(screen.right() - self.width() - 20, screen.bottom() - self.maximumHeight() - 40)
+        self.move(screen.right() - self.width() - 20, screen.bottom() - self.height() - 40)
 
     def _trim_messages(self) -> None:
         layout = self._content._layout

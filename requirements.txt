@@ -6,6 +6,7 @@ sounddevice==0.5.5
 soundfile==0.13.1
 PyQt5==5.15.11
 pynput==1.8.2
+evdev==1.9.3; sys_platform == "linux"
 Pillow==12.2.0
 python-dotenv==1.2.2
 requests==2.34.2
