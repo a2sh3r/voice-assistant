@@ -9,3 +9,5 @@ pynput==1.8.2
 Pillow==12.2.0
 python-dotenv==1.2.2
 requests==2.34.2
+omegaconf==2.3.0
+antlr4-python3-runtime==4.9.3
