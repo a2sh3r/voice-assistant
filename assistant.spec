@@ -13,7 +13,7 @@ Models (Whisper, Silero) are NOT bundled — downloaded at first run into ~/.cac
 
 import sys
 import os
-from PyInstaller.utils.hooks import collect_data_files, collect_dynamic_libs
+from PyInstaller.utils.hooks import collect_data_files, collect_dynamic_libs, collect_submodules
 
 # ── Whisper assets (mel filters, vocabulary, etc.) ────────────────────────────
 whisper_datas = collect_data_files("whisper")
@@ -21,6 +21,11 @@ whisper_datas = collect_data_files("whisper")
 # ── soundfile needs libsndfile ─────────────────────────────────────────────────
 soundfile_datas = collect_data_files("soundfile")
 soundfile_bins  = collect_dynamic_libs("soundfile")
+
+# ── omegaconf + antlr4 (silero loads these at runtime via torch.hub) ──────────
+omegaconf_modules = collect_submodules("omegaconf")
+antlr4_modules    = collect_submodules("antlr4")
+tqdm_modules      = collect_submodules("tqdm")
 
 block_cipher = None
 
@@ -44,8 +49,9 @@ a = Analysis(
         "whisper.transcribe",
         "whisper.utils",
         # silero (loaded via torch.hub — dynamic import)
-        "omegaconf",
-        "tqdm",
+        *omegaconf_modules,
+        *antlr4_modules,
+        *tqdm_modules,
         # audio
         "sounddevice",
         "soundfile",
