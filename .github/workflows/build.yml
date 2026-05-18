@@ -47,6 +47,12 @@ jobs:
         if: runner.os == 'macOS'
         run: brew install portaudio libsndfile
 
+      - name: Add torch lib to PATH (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          $torchLib = python -c "import torch, os; print(os.path.join(os.path.dirname(torch.__file__), 'lib'))"
+          echo "$torchLib" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
       - name: Build with PyInstaller
         run: pyinstaller assistant.spec --noconfirm
 
