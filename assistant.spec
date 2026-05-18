@@ -71,10 +71,7 @@ a = Analysis(
     hooksconfig={},
     runtime_hooks=["hook_torch_dll.py"],
     excludes=[
-        # exclude CUDA — CPU-only build
-        "torch.cuda",
         "torchvision",
-        # exclude test/dev packages
         "pytest",
         "IPython",
         "matplotlib",
